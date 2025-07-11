@@ -5,12 +5,18 @@ import androidx.compose.runtime.remember
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.io.File
 
-@OptIn(DelicateCoroutinesApi::class)
+
 fun main() = application {
-    GlobalScope.launch {
-        TrackingSimulator.runSimulation("src/main/resources/shipment_updates.txt")
-    }
+    // Load the file using the class loader
+    val resourceUrl = object {}.javaClass.classLoader.getResource("test.txt")
+    requireNotNull(resourceUrl) { "test.txt not found in resources!" }
+
+    val filePath = resourceUrl.path
+    println("Running simulation using: $filePath")
+
+    TrackingSimulator.runSimulation(filePath, delayMillis = 1000L)
 
     Window(onCloseRequest = ::exitApplication, title = "Shipment Tracker") {
         MaterialTheme {
@@ -19,3 +25,4 @@ fun main() = application {
         }
     }
 }
+

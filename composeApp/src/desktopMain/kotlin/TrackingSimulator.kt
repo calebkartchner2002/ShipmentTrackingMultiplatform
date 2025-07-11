@@ -14,14 +14,14 @@ object TrackingSimulator {
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    fun runSimulation(filePath: String) {
+    fun runSimulation(filePath: String, delayMillis: Long = 1000L) {
         if (isRunning) return
         isRunning = true
 
         GlobalScope.launch {
             File(filePath).readLines().forEach { line ->
                 processLine(line)
-                delay(1000)
+                delay(delayMillis)
             }
         }
     }
@@ -46,4 +46,9 @@ object TrackingSimulator {
         val info = tokens.drop(2)
         strategy.apply(shipment, info)
     }
+    fun reset() {
+        isRunning = false
+        shipments.clear()
+    }
+
 }
