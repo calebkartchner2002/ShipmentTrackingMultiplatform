@@ -1,63 +1,62 @@
 import kotlin.test.*
 import kotlinx.coroutines.*
+import java.io.File
 
 class TestTrackerViewHelper {
 
-    private lateinit var helper: TrackerViewHelper
-    private lateinit var shipment: Shipment
+    private lateinit var viewHelper: TrackerViewHelper
 
     @BeforeTest
     fun setup() {
-        TrackingSimulator.reset()
-        shipment = Shipment("test123")
-        shipment.addNote("Initial packaging complete")
-        shipment.addUpdate(ShippingUpdate("created", "shipped", 123456789))
+        viewHelper = TrackerViewHelper()
+    TrackingSimulator.reset()
+    }
 
+    @Test
+    fun testTrackingSingleShipment() = runBlocking {
+        // Create a sample shipment and add it to simulator
+        val shipment = Shipment("abc123")
         TrackingSimulator.addShipment(shipment)
-        helper = TrackerViewHelper()
+
+        // Start tracking
+        viewHelper.trackShipment("abc123")
+        val trackedMap = viewHelper.getTrackedShipments()
+        val vm = trackedMap["abc123"]
+
+        assertNotNull(vm, "Shipment view model should be tracked")
+        assertEquals("abc123", vm.shipmentId)
     }
 
     @Test
-    fun testTrackShipmentInitialStateLoads() = runBlocking {
-        helper.trackShipment("test123")
+    fun testStopTrackingShipment() = runBlocking {
+        val shipment = Shipment("xyz789")
+        TrackingSimulator.addShipment(shipment)
 
-        // Allow time for state propagation
-        delay(100)
+        viewHelper.trackShipment("xyz789")
+        assertTrue("xyz789" in viewHelper.getTrackedShipments().keys)
 
-        assertEquals("test123", helper.shipmentId.value)
-        assertEquals("shipped", helper.shipmentStatus.value)
-        assertEquals(1, helper.shipmentNotes.size)
-        assertEquals("Initial packaging complete", helper.shipmentNotes[0])
-        assertTrue(helper.shipmentUpdateHistory.any { it.contains("shipped") })
+        viewHelper.stopTracking("xyz789")
+        assertFalse("xyz789" in viewHelper.getTrackedShipments().keys)
     }
 
     @Test
-    fun testObserverUpdatesReflectInState() = runBlocking {
-        helper.trackShipment("test123")
+    fun testShipmentUpdatesPropagateToViewModel() = runBlocking {
+        val shipment = Shipment("s3000")
+        TrackingSimulator.addShipment(shipment)
 
-        shipment.addNote("Second note added")
-        shipment.setCurrentLocation("Chicago IL")
-        shipment.addUpdate(ShippingUpdate("shipped", "delivered", 987654321))
+        viewHelper.trackShipment("s3000")
+        val vm = viewHelper.getTrackedShipments()["s3000"]
+        assertNotNull(vm)
 
-        delay(100)
+        // Add update to shipment
+        val update = ShippingUpdate("created", "shipped", 1652719999999)
+        shipment.addUpdate(update)
 
-        assertEquals("delivered", helper.shipmentStatus.value)
-        assertEquals("Chicago IL", shipment.getCurrentLocation())
-        assertTrue(helper.shipmentNotes.contains("Second note added"))
-        assertTrue(helper.shipmentUpdateHistory.last().contains("delivered"))
-    }
-
-    @Test
-    fun testStopTrackingClearsState() = runBlocking {
-        helper.trackShipment("test123")
-        delay(100)
-
-        helper.stopTracking()
+        // Let observer propagate
         delay(50)
 
-        assertNull(helper.shipmentId.value)
-        assertEquals("Not Tracking", helper.shipmentStatus.value)
-        assertTrue(helper.shipmentNotes.isEmpty())
-        assertTrue(helper.shipmentUpdateHistory.isEmpty())
+        // Check update in ViewModel
+        val history = vm.shipmentUpdateHistory
+        assertTrue(history.any { it.contains("shipped") }, "Update history should reflect the status change")
     }
 }

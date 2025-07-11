@@ -1,70 +1,47 @@
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.unit.dp
+
 @Composable
 fun ShipmentTrackerScreen(viewHelper: TrackerViewHelper) {
     var inputId by remember { mutableStateOf("") }
-    val shipmentId by viewHelper.shipmentId
-    val status by viewHelper.shipmentStatus
-    val eta by viewHelper.expectedDeliveryDate
-    val notes = viewHelper.shipmentNotes
-    val updates = viewHelper.shipmentUpdateHistory
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp)
-    ) {
-        Text("Shipment Tracking", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(16.dp))
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Track a Shipment", style = MaterialTheme.typography.headlineSmall)
 
         OutlinedTextField(
             value = inputId,
             onValueChange = { inputId = it },
-            label = { Text("Enter Shipment ID") },
+            label = { Text("Shipment ID") },
             modifier = Modifier.fillMaxWidth()
         )
 
-        Row(Modifier.padding(top = 8.dp)) {
-            Button(onClick = { viewHelper.trackShipment(inputId) }) {
-                Text("Track")
-            }
-            Spacer(Modifier.width(8.dp))
-            OutlinedButton(onClick = { viewHelper.stopTracking() }) {
-                Text("Stop Tracking")
-            }
+        Button(
+            onClick = {
+                viewHelper.trackShipment(inputId)
+                inputId = ""
+            },
+            modifier = Modifier.padding(vertical = 8.dp)
+        ) {
+            Text("Track")
         }
 
-        Spacer(Modifier.height(24.dp))
-        Divider()
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
 
-        Text("Tracking: ${shipmentId ?: "None"}", style = MaterialTheme.typography.titleMedium)
-        Text("Status: $status")
-        Text("ETA: $eta")
+        val tracked = viewHelper.getTrackedShipments().values.toList()
 
-        Spacer(Modifier.height(16.dp))
-
-        if (notes.isNotEmpty()) {
-            Text("Notes:", style = MaterialTheme.typography.titleSmall)
-            LazyColumn {
-                items(notes) { note ->
-                    Text("- $note", modifier = Modifier.padding(4.dp))
-                }
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        if (updates.isNotEmpty()) {
-            Text("Update History:", style = MaterialTheme.typography.titleSmall)
-            LazyColumn {
-                items(updates) { update ->
-                    Text("- $update", modifier = Modifier.padding(4.dp))
-                }
+        LazyColumn(
+            modifier = Modifier.fillMaxHeight().padding(bottom = 16.dp)
+        ) {
+            items(tracked, key = { it.shipmentId }) { vm ->
+                ShipmentCard(vm = vm, onRemove = { viewHelper.stopTracking(vm.shipmentId) })
             }
         }
     }
