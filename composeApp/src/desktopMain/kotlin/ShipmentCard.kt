@@ -24,7 +24,8 @@ fun ShipmentCard(vm: TrackedShipmentViewModel, onRemove: () -> Unit) {
             }
 
             Text("Status: ${vm.shipmentStatus.value}")
-            Text("ETA: ${vm.expectedDeliveryDate.value}")
+            Text("ETA: ${vm.expectedDeliveryDate.value.ifBlank { "--" }}")
+            Text("Location: ${vm.location.value.ifBlank { "Unknown" }}")
 
             Spacer(Modifier.height(8.dp))
             Text("Notes:")

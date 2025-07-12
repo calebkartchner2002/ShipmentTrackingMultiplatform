@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.dp
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -32,8 +33,11 @@ fun ShipmentTrackerScreen(viewHelper: TrackerViewHelper) {
         ) {
             Text("Track")
         }
+        viewHelper.errorMessage.value?.let {
+            Text(it, color = Color.Red)
+        }
 
-        Divider(modifier = Modifier.padding(vertical = 8.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         val tracked = viewHelper.getTrackedShipments().values.toList()
 

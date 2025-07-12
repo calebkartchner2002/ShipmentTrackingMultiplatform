@@ -9,6 +9,8 @@ class TrackedShipmentViewModel(val shipment: Shipment) : ShipmentObserver {
     val expectedDeliveryDate = mutableStateOf(formatTimestamp(shipment.getExpectedDeliveryDateTimestamp()))
     val shipmentNotes = mutableStateListOf<String>()
     val shipmentUpdateHistory = mutableStateListOf<String>()
+    val location: State<String> = derivedStateOf { shipment.getCurrentLocation() }
+
 
     init {
         shipment.addObserver(this)
