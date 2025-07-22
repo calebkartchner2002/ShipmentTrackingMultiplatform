@@ -1,4 +1,4 @@
-class Shipment(
+open class Shipment(
     val id: String
 ) {
     var status: String = "created"
@@ -43,6 +43,9 @@ class Shipment(
 
     private fun notifyObservers() {
         observers.forEach { it.onShipmentUpdated(this) }
+    }
+    open fun checkErrorsInTimestamp(createdTimestamp: Long){
+        null
     }
 
     // Read-only accessors for UI layer

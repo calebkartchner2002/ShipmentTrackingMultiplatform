@@ -27,7 +27,7 @@ object TrackingSimulator {
     }
 
     private suspend fun processLine(line: String) {
-        val tokens = line.split(",")
+        val tokens = line.split(",").toMutableList()
         if (tokens.size < 3) {
             println("Skipping malformed line: $line")
             return
@@ -41,6 +41,13 @@ object TrackingSimulator {
             println("Unknown update type: $updateType")
             return
         }
+
+        if (updateType == "created"){
+            val shipment = ShipmentFactory.createShipment(shipmentId, tokens[2].trim().lowercase(), tokens[4].toLong())
+            addShipment(shipment)
+            tokens.removeAt(2)
+        }
+
 
         val shipment = shipments.getOrPut(shipmentId) { Shipment(shipmentId) }
         val info = tokens.drop(2)
