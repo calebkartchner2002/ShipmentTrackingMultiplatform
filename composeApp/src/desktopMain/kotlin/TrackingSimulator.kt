@@ -43,7 +43,7 @@ object TrackingSimulator {
         }
 
         if (updateType == "created"){
-            val shipment = ShipmentFactory.createShipment(shipmentId, tokens[2].trim().lowercase(), tokens[4].toLong())
+            val shipment = ShipmentFactory.createShipment(shipmentId, tokens[2].trim().lowercase(), tokens[3].toLong())
             addShipment(shipment)
             tokens.removeAt(2)
         }
