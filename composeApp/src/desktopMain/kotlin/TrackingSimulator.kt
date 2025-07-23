@@ -10,6 +10,7 @@ object TrackingSimulator {
     }
 
     fun processLine(line: String) {
+        println("Processing line: $line")
         val tokens = line.split(",").toMutableList()
         if (tokens.size < 3) {
             println("Skipping malformed line: $line")

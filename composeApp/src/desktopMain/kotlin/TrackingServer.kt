@@ -40,13 +40,39 @@ fun startTrackingServer() {
             }
 
             post("/update") {
-                val line = call.receiveText()
-                println("Received update: $line")
+                val updateText = call.receiveParameters()["update"]
+
+                if (updateText.isNullOrBlank()) {
+                    call.respondHtml(HttpStatusCode.BadRequest) {
+                        body {
+                            h3 { +"No update provided." }
+                            a(href = "/") { +"Go back" }
+                        }
+                    }
+                    return@post
+                }
+
+                println("Received update from form: $updateText")
+
                 try {
-                    TrackingSimulator.processLine(line)
-                    call.respondText("Update processed successfully.")
+                    TrackingSimulator.processLine(updateText)
+
+                    call.respondHtml(HttpStatusCode.OK) {
+                        head { title("Shipment Update Sender") }
+                        body {
+                            h3 { +"Update processed successfully!" }
+                            p { +"Sent: $updateText" }
+                            br
+                            a(href = "/") { +"Submit another update" }
+                        }
+                    }
                 } catch (e: Exception) {
-                    call.respondText("Error: ${e.message}")
+                    call.respondHtml(HttpStatusCode.InternalServerError) {
+                        body {
+                            h3 { +"Error processing update: ${e.message}" }
+                            a(href = "/") { +"Go back and try again" }
+                        }
+                    }
                 }
             }
         }
