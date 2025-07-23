@@ -1,9 +1,5 @@
-import kotlinx.coroutines.*
-import java.io.File
-
 object TrackingSimulator {
     private val shipments = mutableMapOf<String, Shipment>()
-    private var isRunning = false
 
     fun addShipment(shipment: Shipment) {
         shipments[shipment.id] = shipment
@@ -13,20 +9,7 @@ object TrackingSimulator {
         return shipments[id]
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    fun runSimulation(filePath: String, delayMillis: Long = 1000L) {
-        if (isRunning) return
-        isRunning = true
-
-        GlobalScope.launch {
-            File(filePath).readLines().forEach { line ->
-                processLine(line)
-                delay(delayMillis)
-            }
-        }
-    }
-
-    private suspend fun processLine(line: String) {
+    fun processLine(line: String) {
         val tokens = line.split(",").toMutableList()
         if (tokens.size < 3) {
             println("Skipping malformed line: $line")
@@ -42,20 +25,37 @@ object TrackingSimulator {
             return
         }
 
-        if (updateType == "created"){
-            val shipment = ShipmentFactory.createShipment(shipmentId, tokens[2].trim().lowercase(), tokens[3].toLong())
+        if (updateType == "created") {
+            if (tokens.size < 4) {
+                println("Malformed 'created' line: $line")
+                return
+            }
+
+            val shipmentType = tokens[2].trim()
+            val creationTimestamp = tokens[3].trim().toLongOrNull()
+            if (creationTimestamp == null) {
+                println("Invalid timestamp: $line")
+                return
+            }
+
+            val shipment = ShipmentFactory.createShipment(shipmentId, shipmentType, creationTimestamp)
             addShipment(shipment)
+
+            // Remove type and timestamp for remaining info list
             tokens.removeAt(2)
         }
 
+        val shipment = shipments[shipmentId]
+        if (shipment == null) {
+            println("Shipment not found: $shipmentId")
+            return
+        }
 
-        val shipment = shipments.getOrPut(shipmentId) { Shipment(shipmentId) }
         val info = tokens.drop(2)
         strategy.apply(shipment, info)
     }
+
     fun reset() {
-        isRunning = false
         shipments.clear()
     }
-
 }
