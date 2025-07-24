@@ -42,19 +42,17 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
 
-            // ✅ Coroutines version
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.7.3")
 
-            // ✅ Ktor 2.3.4 server-side dependencies
             implementation("io.ktor:ktor-server-core:2.3.4")
             implementation("io.ktor:ktor-server-netty:2.3.4")
             implementation("io.ktor:ktor-server-content-negotiation:2.3.4")
             implementation("io.ktor:ktor-server-html-builder:2.3.4")
             implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.4")
 
-            // ✅ Serialization
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
         }
     }
 }

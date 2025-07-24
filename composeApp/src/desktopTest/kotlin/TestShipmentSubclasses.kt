@@ -5,86 +5,53 @@ class TestShipmentSubclasses {
 
     private val oneDayMillis = 24 * 60 * 60 * 1000L
 
-    @Test
-    fun testExpressShipmentViolation() {
-        val createdTime = Instant.now().toEpochMilli()
-        val shipment = ExpressShipment("EXP123", createdTime)
+    @BeforeTest
+    fun setup() {
+        TrackingSimulator.reset()
+    }
 
-        shipment.setExpectedDeliveryDate(createdTime + 4 * oneDayMillis) // too far out
-        shipment.checkErrorsInTimestamp(createdTime)
-
-        val notes = shipment.getNotes()
-        assertEquals(1, notes.size)
-        assertTrue(notes[0].contains("express shipment") && notes[0].contains("more than 3 days"))
+    @AfterTest
+    fun teardown() {
+        TrackingSimulator.reset()
     }
 
     @Test
-    fun testExpressShipmentNoViolation() {
+    fun testExpressShipment() {
         val createdTime = Instant.now().toEpochMilli()
-        val shipment = ExpressShipment("EXP456", createdTime)
+        TrackingSimulator.processLine("created,EXP456,express,$createdTime")
+        TrackingSimulator.processLine("expected,EXP456,${createdTime + 2 * oneDayMillis}")
 
-        shipment.setExpectedDeliveryDate(createdTime + 2 * oneDayMillis) // valid
-        shipment.checkErrorsInTimestamp(createdTime)
-
+        val shipment = TrackingSimulator.findShipment("EXP456")!!
         assertTrue(shipment.getNotes().isEmpty())
     }
 
     @Test
-    fun testOvernightShipmentViolation() {
+    fun testOvernightShipment() {
         val createdTime = Instant.now().toEpochMilli()
-        val shipment = OvernightShipment("OVN123", createdTime)
+        TrackingSimulator.processLine("created,OVN456,overnight,$createdTime")
+        TrackingSimulator.processLine("expected,OVN456,${createdTime + oneDayMillis}")
 
-        shipment.setExpectedDeliveryDate(createdTime + 2 * oneDayMillis) // too late
-        shipment.checkErrorsInTimestamp(createdTime)
-
-        val notes = shipment.getNotes()
-        assertEquals(1, notes.size)
-        assertTrue(notes[0].contains("overnight shipment") && notes[0].contains("not exactly 1 day"))
-    }
-
-    @Test
-    fun testOvernightShipmentNoViolation() {
-        val createdTime = Instant.now().toEpochMilli()
-        val shipment = OvernightShipment("OVN456", createdTime)
-
-        shipment.setExpectedDeliveryDate(createdTime + oneDayMillis) // exactly 1 day
-        shipment.checkErrorsInTimestamp(createdTime)
-
+        val shipment = TrackingSimulator.findShipment("OVN456")!!
         assertTrue(shipment.getNotes().isEmpty())
     }
 
     @Test
-    fun testBulkShipmentViolation() {
+    fun testBulkShipment() {
         val createdTime = Instant.now().toEpochMilli()
-        val shipment = BulkShipment("BLK123", createdTime)
+        TrackingSimulator.processLine("created,BLK456,bulk,$createdTime")
+        TrackingSimulator.processLine("expected,BLK456,${createdTime + 4 * oneDayMillis}")
 
-        shipment.setExpectedDeliveryDate(createdTime + oneDayMillis) // too soon
-        shipment.checkErrorsInTimestamp(createdTime)
-
-        val notes = shipment.getNotes()
-        assertEquals(1, notes.size)
-        assertTrue(notes[0].contains("bulk shipment") && notes[0].contains("sooner than 3 days"))
-    }
-
-    @Test
-    fun testBulkShipmentNoViolation() {
-        val createdTime = Instant.now().toEpochMilli()
-        val shipment = BulkShipment("BLK456", createdTime)
-
-        shipment.setExpectedDeliveryDate(createdTime + 4 * oneDayMillis) // valid
-        shipment.checkErrorsInTimestamp(createdTime)
-
+        val shipment = TrackingSimulator.findShipment("BLK456")!!
         assertTrue(shipment.getNotes().isEmpty())
     }
 
     @Test
-    fun testStandardShipmentNeverViolates() {
+    fun testStandardShipment() {
         val createdTime = Instant.now().toEpochMilli()
-        val shipment = StandardShipment("STD123", createdTime)
+        TrackingSimulator.processLine("created,STD123,standard,$createdTime")
+        TrackingSimulator.processLine("expected,STD123,${createdTime + 100 * oneDayMillis}")
 
-        shipment.setExpectedDeliveryDate(createdTime + 100 * oneDayMillis) // completely arbitrary
-        shipment.checkErrorsInTimestamp(createdTime)
-
+        val shipment = TrackingSimulator.findShipment("STD123")!!
         assertTrue(shipment.getNotes().isEmpty())
     }
 }

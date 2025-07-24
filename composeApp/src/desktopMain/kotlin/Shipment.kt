@@ -8,6 +8,7 @@ open class Shipment(
     private val updateHistory: MutableList<ShippingUpdate> = mutableListOf()
     private var expectedDeliveryDateTimestamp: Long? = null
     private var currentLocation: String = ""
+    private var createdTimestamp: Long? = null
 
     private val observers = mutableListOf<ShipmentObserver>()
 
@@ -24,6 +25,7 @@ open class Shipment(
 
     fun setExpectedDeliveryDate(timestamp: Long) {
         expectedDeliveryDateTimestamp = timestamp
+        checkErrorsInTimestamp()
         notifyObservers()
     }
 
@@ -44,11 +46,17 @@ open class Shipment(
     private fun notifyObservers() {
         observers.forEach { it.onShipmentUpdated(this) }
     }
-    open fun checkErrorsInTimestamp(createdTimestamp: Long){
+    open fun checkErrorsInTimestamp(){
         null
     }
 
-    // Read-only accessors for UI layer
+    fun setCreatedTimestamp(timestamp: Long) {
+        if (createdTimestamp == null) {
+            createdTimestamp = timestamp
+        }
+    }
+
+    fun getCreatedTimestamp(): Long? = createdTimestamp
     fun getNotes(): List<String> = notes.toList()
     fun getUpdateHistory(): List<ShippingUpdate> = updateHistory.toList()
     fun getExpectedDeliveryDateTimestamp(): Long? = expectedDeliveryDateTimestamp
